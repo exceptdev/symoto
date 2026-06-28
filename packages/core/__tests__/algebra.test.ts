@@ -4,7 +4,8 @@ import { unit, DimensionMismatch } from '../src/quantity/units.js';
 import { BoundaryViolation, type Boundary } from '../src/quantity/boundary.js';
 import { q } from '../src/quantity/quantity.js';
 import { input } from '../src/quantity/provenance.js';
-import { add, sub } from '../src/quantity/algebra.js';
+import { add, sub, mul, div, scale, convert, adapt, integrate } from '../src/quantity/algebra.js';
+import { sameDimension } from '../src/quantity/units.js';
 import { arbBoundary } from './arbitraries.js';
 
 const perCapita: Boundary = { accounting: 'consumption', basis: 'per-capita', temporal: 'flow' };
@@ -61,5 +62,48 @@ describe('algebra add/sub refuse-to-net', () => {
         expect(() => sub(a, b)).toThrow(BoundaryViolation);
       }),
     );
+  });
+});
+
+describe('algebra mul/div/scale/convert and deferrals', () => {
+  it('mul composes units and keeps the left operand boundary', () => {
+    const dwellings = q(2, unit('dwelling'), territorial, input('dw'));
+    const roofPerDwelling = q(115, unit('m^2/dwelling'), territorial, input('roof'));
+    const area = mul(dwellings, roofPerDwelling);
+    expect(area.value).toBeCloseTo(230, 9);
+    expect(sameDimension(area.unit, unit('m^2'))).toBe(true);
+    expect(area.boundary).toBe(dwellings.boundary);
+    expect(area.provenance.kind).toBe('op');
+  });
+
+  it('div composes via composeDiv and keeps the left boundary', () => {
+    const area = q(10, unit('m^2'), territorial, input('area'));
+    const dwellings = q(2, unit('dwelling'), territorial, input('dw'));
+    const perDwelling = div(area, dwellings);
+    expect(perDwelling.value).toBeCloseTo(5, 9);
+    expect(sameDimension(perDwelling.unit, unit('m^2/dwelling'))).toBe(true);
+    expect(perDwelling.boundary).toBe(area.boundary);
+  });
+
+  it('scale halves the value, leaving unit and boundary unchanged', () => {
+    const r = scale(q(10, unit('MWh'), perCapita, input('x')), 0.5);
+    expect(r.value).toBeCloseTo(5, 9);
+    expect(r.unit.canonical).toBe('MWh');
+    expect(r.boundary).toBe(perCapita);
+    if (r.provenance.kind === 'op') expect(r.provenance.op).toBe('scale');
+  });
+
+  it('convert changes unit within a dimension and records a convert op; across dimensions throws', () => {
+    const r = convert(q(1, unit('MWh'), perCapita, input('x')), unit('kWh'));
+    expect(r.value).toBeCloseTo(1000, 9);
+    expect(r.unit.canonical).toBe('kWh');
+    if (r.provenance.kind === 'op') expect(r.provenance.op).toBe('convert');
+    expect(() => convert(q(1, unit('MWh'), perCapita, input('x')), unit('m^2'))).toThrow();
+  });
+
+  it('adapt throws a Phase 2 message and integrate throws a Phase 7 message', () => {
+    const x = q(1, unit('MWh'), perCapita, input('x'));
+    expect(() => adapt(x, territorial, 'm')).toThrow(/Phase 2/);
+    expect(() => integrate(x, x, x)).toThrow(/Phase 7/);
   });
 });
