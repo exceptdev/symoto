@@ -2,21 +2,19 @@
 // Every port value is a Quantity, so a bare number cannot cross a port.
 import type { Quantity } from '../quantity/quantity.js';
 import type { Boundary } from '../quantity/boundary.js';
+import type { SymUnit } from '../quantity/units.js';
+import type { RunContext } from '../run/context.js';
 import type { Graph } from './graph.js';
 
 export type NodeKind = 'element' | 'flow' | 'controller' | 'readout' | 'source';
 export type QMap = Record<string, Quantity>;
 
-// Forward placeholder for the RunContext type. Plan 05 makes ../run/context.ts the
-// canonical home and replaces this local declaration with an import from there.
-export interface RunContext {
-  readonly inputs: QMap;
-  readonly clock?: unknown;
-}
-
 export interface PortSignature {
   readonly dimension: string;
   readonly boundary: Boundary;
+  // The port's unit. Optional because validateConnection only needs the dimension; the
+  // evaluator uses it to seed feedback edges with a zero Quantity of the right unit.
+  readonly unit?: SymUnit;
 }
 
 export interface Port {
