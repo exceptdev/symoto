@@ -1,0 +1,27 @@
+{
+  "name": "symoto",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "description": "Symoto: a deterministic, isomorphic computation core where every value is a Quantity envelope that refuses to silently net incompatible quantities.",
+  "scripts": {
+    "test": "pnpm -r run test",
+    "typecheck": "pnpm -r run typecheck",
+    "lint": "eslint . --quiet",
+    "example": "tsx examples/headless-run.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@symoto/core": "workspace:*",
+    "@symoto/oc-model": "workspace:*",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.62.0",
+    "@typescript-eslint/parser": "^8.62.0",
+    "eslint": "^9.0.0",
+    "fast-check": "4.8.0",
+    "tsx": "4.22.4",
+    "typescript": "~5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
