@@ -3,6 +3,8 @@
 import fc from 'fast-check';
 import { unit, type SymUnit } from '../src/quantity/units.js';
 import type { Boundary, Accounting, Basis, Temporal } from '../src/quantity/boundary.js';
+import { input, type ProvRef } from '../src/quantity/provenance.js';
+import { q, type Quantity } from '../src/quantity/quantity.js';
 
 const UNIT_NAMES = ['MWh', 'kWh', 'm^2', 'person', 'dwelling'] as const;
 const ACCOUNTING: readonly Accounting[] = ['territorial', 'consumption', 'production'];
@@ -41,3 +43,16 @@ export const arbBoundary: fc.Arbitrary<Boundary> = fc
     };
     return out;
   });
+
+export const arbProvRef: fc.Arbitrary<ProvRef> = fc
+  .string({ minLength: 1, maxLength: 6 })
+  .map((s) => input(s));
+
+export const arbQuantity: fc.Arbitrary<Quantity> = fc
+  .record({
+    value: fc.double({ min: -1e6, max: 1e6, noNaN: true, noDefaultInfinity: true }),
+    unit: arbSymUnit,
+    boundary: arbBoundary,
+    provenance: arbProvRef,
+  })
+  .map(({ value, unit: u, boundary, provenance }) => q(value, u, boundary, provenance));
