@@ -83,3 +83,60 @@ describe('validateModel port-completeness (UNIT-01, UNIT-02)', () => {
     expect(() => assertModelWellFormed(bad)).toThrow(/not well formed/);
   });
 });
+
+// A producer (out-port) wired to a consumer (in-port), so the connection sweep has
+// something to resolve. The out/in signatures are supplied by the caller.
+function srcNode(id: string, out: Port): Node {
+  return { id, kind: 'source', ports: { in: [], out: [out] }, compute: (): QMap => ({}) };
+}
+function sinkNode(id: string, in_: Port): Node {
+  return { id, kind: 'readout', ports: { in: [in_], out: [] }, compute: (): QMap => ({}) };
+}
+
+describe('validateModel connection sweep (build-time wire-time guard)', () => {
+  it('returns zero connection violations for a well-formed connected graph', () => {
+    const graph = buildGraph(
+      [srcNode('p', port('out', 'MWh', territorial)), sinkNode('c', port('in', 'MWh', territorial))],
+      [{ from: { nodeId: 'p', portId: 'out' }, to: { nodeId: 'c', portId: 'in' } }],
+    );
+    expect(validateModel(graph)).toEqual([]);
+  });
+
+  it('reports a dimension violation for a dimension-mismatched wire', () => {
+    const graph = buildGraph(
+      [srcNode('p', port('out', 'MWh', territorial)), sinkNode('c', port('in', 'm^2', territorial))],
+      [{ from: { nodeId: 'p', portId: 'out' }, to: { nodeId: 'c', portId: 'in' } }],
+    );
+    expect(validateModel(graph).some((v) => v.code === 'dimension')).toBe(true);
+  });
+
+  it('reports a boundary violation for a boundary-mismatched wire', () => {
+    const graph = buildGraph(
+      [
+        srcNode('p', port('out', 'MWh', territorial)),
+        sinkNode('c', port('in', 'MWh', { ...territorial, basis: 'per-capita' })),
+      ],
+      [{ from: { nodeId: 'p', portId: 'out' }, to: { nodeId: 'c', portId: 'in' } }],
+    );
+    expect(validateModel(graph).some((v) => v.code === 'boundary')).toBe(true);
+  });
+
+  it('reports a boundary violation for a D-06 custom-dimension-only difference', () => {
+    const graph = buildGraph(
+      [
+        srcNode('p', port('out', 'MWh', { ...territorial, custom: { scope: 'A' } })),
+        sinkNode('c', port('in', 'MWh', { ...territorial, custom: { scope: 'B' } })),
+      ],
+      [{ from: { nodeId: 'p', portId: 'out' }, to: { nodeId: 'c', portId: 'in' } }],
+    );
+    expect(validateModel(graph).some((v) => v.code === 'boundary')).toBe(true);
+  });
+
+  it('reports a dangling-port violation for an unresolved connection endpoint (does not throw)', () => {
+    const graph = buildGraph(
+      [srcNode('p', port('out', 'MWh', territorial)), sinkNode('c', port('in', 'MWh', territorial))],
+      [{ from: { nodeId: 'p', portId: 'nope' }, to: { nodeId: 'c', portId: 'in' } }],
+    );
+    expect(validateModel(graph).some((v) => v.code === 'dangling-port')).toBe(true);
+  });
+});
