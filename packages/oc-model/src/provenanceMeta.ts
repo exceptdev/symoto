@@ -30,8 +30,8 @@ export interface ReadoutMeta {
  * and within-node DAG); the registry adds the human-readable formula and the citations on top.
  */
 export const PROVENANCE_META: Record<string, ReadoutMeta> = {
-  // Land
-  'land.totalLandM2': {
+  // Land (the land node uses the landUse.* port prefix)
+  'landUse.totalLandM2': {
     formula:
       'total land = built footprint + urban green + roads + parking + infrastructure + agriculture + nature + water + open space, all scaled by population over the baseline population',
     sources: [
