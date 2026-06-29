@@ -6,7 +6,7 @@ import type { Node, QMap, Port } from '../graph/node.js';
 import type { RunContext } from '../run/context.js';
 import type { Quantity } from '../quantity/quantity.js';
 import { q } from '../quantity/quantity.js';
-import { input } from '../quantity/provenance.js';
+import { input, nodeProv, type InputEdge } from '../quantity/provenance.js';
 
 export function findNode(graph: Graph, id: string): Node {
   const node = graph.nodes.find((n) => n.id === id);
@@ -40,6 +40,34 @@ export function gatherInputs(
   return inputs;
 }
 
+/**
+ * Wrap every output of a node in a node-boundary ProvRef (PROV-01, Success Criterion 4). For each
+ * output `[key, qty]`, the node's incoming graph edges become InputEdges, the provenance compute
+ * produced becomes `local` (preserving the carbon adapter DAG), and `formula`/`sources` are looked
+ * up from `node.meta` by readout key. Value, unit, and boundary are unchanged: only provenance is
+ * replaced, so the readout number stays byte-identical and parity holds.
+ */
+export function stampNodeProvenance(graph: Graph, node: Node, out: QMap): QMap {
+  const inputEdges: InputEdge[] = graph.connections
+    .filter((conn) => conn.to.nodeId === node.id)
+    .map((conn) => ({ fromNodeId: conn.from.nodeId, fromPortId: conn.from.portId, toPortId: conn.to.portId }));
+  const stamped: QMap = {};
+  for (const key of Object.keys(out)) {
+    const qty = out[key];
+    if (qty === undefined) continue;
+    stamped[key] = q(
+      qty.value,
+      qty.unit,
+      qty.boundary,
+      nodeProv(node.id, key, qty.provenance, inputEdges, {
+        formula: node.meta?.formula?.[key],
+        sources: node.meta?.sources?.[key] ?? [],
+      }),
+    );
+  }
+  return stamped;
+}
+
 export function evaluateNode(
   graph: Graph,
   nodeId: string,
@@ -49,7 +77,7 @@ export function evaluateNode(
 ): void {
   const node = findNode(graph, nodeId);
   const inputs = gatherInputs(graph, node, values, seed);
-  values.set(nodeId, node.compute(ctx, inputs));
+  values.set(nodeId, stampNodeProvenance(graph, node, node.compute(ctx, inputs)));
 }
 
 /** Deterministic feedback-edge seed: a zero Quantity carrying the consumer port unit and boundary. */
