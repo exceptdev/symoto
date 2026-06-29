@@ -10,6 +10,7 @@
 import type { Graph } from './graph.js';
 import type { Boundary } from '../quantity/boundary.js';
 import type { SymUnit } from '../quantity/units.js';
+import { validateConnection } from './connection.js';
 
 export interface ModelViolation {
   readonly code:
@@ -59,6 +60,35 @@ export function validateModel(graph: Graph): readonly ModelViolation[] {
           message: `Port ${port.id} on node ${node.id} declares no boundary (UNIT-02).`,
         });
       }
+    }
+  }
+
+  // Pass 2: connection sweep. Every wire passes the same dimension+boundary guard as a
+  // single connection (reusing validateConnection so the D-06 deep equality is not
+  // duplicated). An unresolvable endpoint is reported, not thrown, so the guard surfaces
+  // all problems at once (UNIT-05 wire-time line, applied model-wide).
+  for (const conn of graph.connections) {
+    const producer = graph.nodes.find((n) => n.id === conn.from.nodeId);
+    const producerPort = producer?.ports.out.find((p) => p.id === conn.from.portId);
+    const consumer = graph.nodes.find((n) => n.id === conn.to.nodeId);
+    const consumerPort = consumer?.ports.in.find((p) => p.id === conn.to.portId);
+
+    if (!producerPort || !consumerPort) {
+      violations.push({
+        code: 'dangling-port',
+        message: `Connection ${conn.from.nodeId}.${conn.from.portId} -> ${conn.to.nodeId}.${conn.to.portId} has an unresolved ${!producerPort ? 'producer' : 'consumer'} port.`,
+      });
+      continue;
+    }
+
+    const wireError = validateConnection(producerPort.signature, consumerPort.signature);
+    if (wireError) {
+      violations.push({
+        code: wireError.code,
+        nodeId: conn.to.nodeId,
+        portId: conn.to.portId,
+        message: `Connection ${conn.from.nodeId}.${conn.from.portId} -> ${conn.to.nodeId}.${conn.to.portId}: ${wireError.message}`,
+      });
     }
   }
 
