@@ -5,6 +5,7 @@
 import type { Graph } from '../graph/graph.js';
 import type { QMap } from '../graph/node.js';
 import type { ProvRef } from '../quantity/provenance.js';
+import type { RequestedActual } from '../run/requestedActual.js';
 import { serializeTrace, type ProvenanceTrace } from '../provenance/trace.js';
 import { makeRunContext } from '../run/context.js';
 import { kahnTopoSort } from './topo.js';
@@ -16,6 +17,9 @@ export interface RunResult {
   // The serializable provenance of the run (PROV-01, Success Criterion 4): node records plus edge id
   // lists, captured once per node output (linear in node count), acyclic by construction.
   readonly provenance: ProvenanceTrace;
+  // The requested-vs-actual records collected from the run-context clamp sink (PROV-03): one per
+  // clamped or recomputed input, so a clamped input is never presented as honored.
+  readonly requestedActual: readonly RequestedActual[];
 }
 
 /** Collect the node-boundary ProvRef of every evaluated node output, for serializeTrace. */
@@ -66,5 +70,6 @@ export function run(graph: Graph, inputs: QMap): RunResult {
   return {
     readouts: collectReadouts(graph, values),
     provenance: serializeTrace(collectProvenance(values)),
+    requestedActual: ctx.clamps,
   };
 }

@@ -53,6 +53,18 @@ export type ProvRef =
 
 export const input = (portId: string): ProvRef => ({ kind: 'input', portId });
 
+/**
+ * Mark a clamped input not honored (PROV-03): carry the requested and the actual value on the input
+ * ProvRef so the readout's own provenance shows its requested value was not honored. This reuses the
+ * requested/actual hook documented on the input variant above.
+ */
+export const inputClamped = (portId: string, requested: number, actual: number): ProvRef => ({
+  kind: 'input',
+  portId,
+  requested,
+  actual,
+});
+
 export const coefficient = (id: string, localeSensitive = false, source?: string): ProvRef => ({
   kind: 'coefficient',
   id,

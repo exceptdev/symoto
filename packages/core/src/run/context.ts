@@ -1,12 +1,29 @@
-// The thin run context threaded through every node.compute. Phase 1 carries only the
-// run inputs; the clock placeholder is reserved for the Phase 7 stock-flow integrator.
+// The thin run context threaded through every node.compute. It carries the run inputs, the reserved
+// clock placeholder (Phase 7 stock-flow integrator), and the requested-vs-actual clamp sink
+// (PROV-03): nodes push a record when they clamp or recompute an input, and run() returns them.
 import type { QMap } from '../graph/node.js';
+import type { RequestedActual } from './requestedActual.js';
 
 export interface RunContext {
   readonly inputs: QMap;
   readonly clock?: unknown;
+  /** The collected requested-vs-actual records (one per key; recordClamp upserts). */
+  readonly clamps: RequestedActual[];
+  /** Push a requested-vs-actual record, replacing any existing record for the same key. */
+  recordClamp(record: RequestedActual): void;
 }
 
 export function makeRunContext(inputs: QMap): RunContext {
-  return { inputs };
+  const clamps: RequestedActual[] = [];
+  return {
+    inputs,
+    clamps,
+    recordClamp(record: RequestedActual): void {
+      // Upsert by key: a node in the fixed-point cyclic region computes once per iteration, so the
+      // final converged record must replace earlier ones rather than accumulating duplicates.
+      const i = clamps.findIndex((c) => c.key === record.key);
+      if (i >= 0) clamps[i] = record;
+      else clamps.push(record);
+    },
+  };
 }

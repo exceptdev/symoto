@@ -14,7 +14,7 @@ export { boundariesEqual, assertSameBoundary, boundariesCompatible, BoundaryViol
 export type { Boundary, Accounting, Basis, Temporal } from './quantity/boundary.js';
 
 // Provenance
-export { input, coefficient, opProv, adapterProv, nodeProv, sourceRef } from './quantity/provenance.js';
+export { input, inputClamped, coefficient, opProv, adapterProv, nodeProv, sourceRef } from './quantity/provenance.js';
 export type { ProvRef, QOp, InputEdge, SourceRef } from './quantity/provenance.js';
 
 // Provenance trace (PROV-01, Success Criterion 4; the contract Phase 8 reuses for export)
@@ -46,6 +46,9 @@ export type { AdapterNodeArgs } from './graph/adapterNode.js';
 // Run context and evaluator
 export { makeRunContext } from './run/context.js';
 export type { RunContext } from './run/context.js';
+// Requested-vs-actual (PROV-03)
+export { clampRecord } from './run/requestedActual.js';
+export type { RequestedActual } from './run/requestedActual.js';
 export { kahnTopoSort } from './eval/topo.js';
 export type { TopoOrder } from './eval/topo.js';
 export { resolveFixedPoint } from './eval/fixedpoint.js';
