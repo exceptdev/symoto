@@ -26,17 +26,20 @@ const NL_TRANSPORT_TONNES_PER_CAPITA = 1.941176;
 const TRANSPORT_OPERATIONAL_SHARE = 0.5;
 const DUTCH_BASELINE_PER_CAPITA_TONNES = 9.117647;
 
-const DESIGN_FOOTPRINT_COUNTRY_FACTOR: Record<Country, number> = {
+/** Exported for the LOC-02 locale-coefficient manifest; classified as locale-varying. */
+export const DESIGN_FOOTPRINT_COUNTRY_FACTOR: Record<Country, number> = {
   Netherlands: 1.0, Vietnam: 0.43, Brazil: 0.28,
 };
-const NITROGEN_COUNTRY_FACTOR: Record<Country, number> = {
+/** Exported for the LOC-02 locale-coefficient manifest; classified as locale-varying. */
+export const NITROGEN_COUNTRY_FACTOR: Record<Country, number> = {
   Netherlands: 1.0, Vietnam: 0.95, Brazil: 0.45,
 };
 const DIET_CO2_FACTOR: Record<NonNullable<SimInputs['dietaryPreference']>, number> = {
   omnivore: 1.0, flexitarian: 0.85, vegetarian: 0.7, vegan: 0.55,
 };
 const NON_AG_NITROGEN_KG_PER_CAPITA = 4.5;
-const GRID_CO2_TONNES_PER_MWH: Record<Country, number> = {
+/** Exported for the LOC-02 locale-coefficient manifest; classified as locale-varying. */
+export const GRID_CO2_TONNES_PER_MWH: Record<Country, number> = {
   Netherlands: 0.38, Vietnam: 0.6, Brazil: 0.12,
 };
 

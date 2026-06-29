@@ -20,8 +20,9 @@ import { LAND, ENERGY_DEMAND, ENERGY_SUPPLY, port, m2U, mwhU, dwellingU, idxU } 
 
 const KWH_PER_MWH = 1000;
 
-/** INDICATIVE per-country end-use demand localization factor (verbatim). */
-const ENERGY_ENDUSE_COUNTRY_FACTOR: Record<Country, number> = {
+/** INDICATIVE per-country end-use demand localization factor (verbatim). Exported for the LOC-02
+ * locale-coefficient manifest (localeCoefficients.ts), which classifies it as locale-varying. */
+export const ENERGY_ENDUSE_COUNTRY_FACTOR: Record<Country, number> = {
   Netherlands: 1.0,
   Vietnam: 0.33,
   Brazil: 0.52,

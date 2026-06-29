@@ -15,7 +15,8 @@ import { LAND, MASS_FLOW, MONEY, WATER_FLOW, CARBON_TERRITORIAL, COUNT, INDEX, p
 const KG_PER_TONNE = 1000;
 const FOOD_CONSUMPTION_KG_PER_CAPITA = 800;
 
-const FOOD_DEMAND_COUNTRY_FACTOR: Record<Country, number> = {
+/** Exported for the LOC-02 locale-coefficient manifest; classified as locale-varying. */
+export const FOOD_DEMAND_COUNTRY_FACTOR: Record<Country, number> = {
   Netherlands: 1.0,
   Vietnam: 0.8,
   Brazil: 0.88,

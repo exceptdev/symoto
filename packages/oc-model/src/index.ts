@@ -22,6 +22,10 @@ export type { ScenarioResult } from './scenario.js';
 // production run threads onto every readout boundary.
 export { localeOf, runOc } from './locale.js';
 
+// The OC locale-coefficient manifest (Phase 6, LOC-02): one LocaleDescriptor per consumed
+// coefficient, classified locale-varying vs deliberately-global, driving the invariance flagger.
+export { OC_LOCALE_COEFFICIENTS } from './localeCoefficients.js';
+
 // The shared parity surface (single source of truth for the in-repo adapter-parity test and the
 // downstream Vizapp parity gate): the scenario grid, comparator, epsilon policy, and deviations.
 export {
