@@ -35,6 +35,12 @@ export { OC_LOCALE_COEFFICIENTS } from './localeCoefficients.js';
 // NL/VN/BR, flagging the historical constant-where-it-should-vary coefficients by default.
 export { flagOcInvariance } from './invariance.js';
 
+// Run export (PROV-04): a real OC run exported through the core RunExport, composing the Phase 5
+// provenance and honest compounds, the Phase 6 locale and invariance flags, and the optional Phase 7
+// cumulative-carbon playback, for an external reviewer or agent (the Professor critique system).
+export { exportOcRun } from './export.js';
+export type { ExportOcRunOpts } from './export.js';
+
 // The shared parity surface (single source of truth for the in-repo adapter-parity test and the
 // downstream Vizapp parity gate): the scenario grid, comparator, epsilon policy, and deviations.
 export {
