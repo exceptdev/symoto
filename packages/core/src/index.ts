@@ -32,6 +32,8 @@ export type { Graph } from './graph/graph.js';
 export type { Node, NodeKind, Port, PortSignature, QMap } from './graph/node.js';
 export { validateModel, assertModelWellFormed } from './graph/validate.js';
 export type { ModelViolation } from './graph/validate.js';
+export { makeAdapterNode } from './graph/adapterNode.js';
+export type { AdapterNodeArgs } from './graph/adapterNode.js';
 
 // Run context and evaluator
 export { makeRunContext } from './run/context.js';

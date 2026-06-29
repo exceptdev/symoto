@@ -46,9 +46,9 @@ describe('makeAdapterNode', () => {
     const out = node.compute(makeRunContext({}), inputs);
     const result = out.abs;
     expect(result).toBeDefined();
-    expect(result.value).toBeCloseTo(2000, 9);
-    expect(result.boundary).toEqual(ABSOLUTE);
-    expect(result.provenance.kind).toBe('adapter');
+    expect(result!.value).toBeCloseTo(2000, 9);
+    expect(result!.boundary).toEqual(ABSOLUTE);
+    expect(result!.provenance.kind).toBe('adapter');
   });
 
   it('throws a clear error when the declared source input port is missing', () => {
@@ -77,7 +77,7 @@ describe('makeAdapterNode', () => {
         in: [{ id: 'in', signature: { dimension: kwhU.dimension, boundary: ABSOLUTE, unit: kwhU } }],
         out: [{ id: 'absoluteDemand', signature: { dimension: kwhU.dimension, boundary: ABSOLUTE, unit: kwhU } }],
       },
-      compute: (_ctx, inputs): QMap => ({ absoluteDemand: inputs.in }),
+      compute: (_ctx, inputs): QMap => ({ absoluteDemand: inputs.in! }),
     };
 
     const graph = buildGraph(
@@ -94,8 +94,8 @@ describe('makeAdapterNode', () => {
     const result = run(graph, {});
     const readoutValue = result.readouts.absoluteDemand;
     expect(readoutValue).toBeDefined();
-    expect(readoutValue.boundary).toEqual(ABSOLUTE);
-    expect(readoutValue.provenance.kind).toBe('adapter');
-    expect(readoutValue.value).toBeCloseTo(2000, 9);
+    expect(readoutValue!.boundary).toEqual(ABSOLUTE);
+    expect(readoutValue!.provenance.kind).toBe('adapter');
+    expect(readoutValue!.value).toBeCloseTo(2000, 9);
   });
 });
