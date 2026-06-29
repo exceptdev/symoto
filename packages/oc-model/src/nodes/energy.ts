@@ -4,7 +4,7 @@
 // backfill, curtailment, and generation land. The energyNode reads the land node's BASE ports
 // (housingUnits, eligibleWindBaseLandM2), so the cycle settles in exactly two passes, and
 // exposes energyGenerationLandM2 as the back-edge into the land closed total.
-import { q, input, type Node, type QMap } from '@symoto/core';
+import { q, input, inputClamped, type Node, type QMap } from '@symoto/core';
 import { COEFFICIENTS } from '../coefficients.generated.js';
 import { num, type ModelCoefficients, type Country } from '../config.js';
 import type { SimInputs, EnergyScenario } from '../types.js';
@@ -200,10 +200,29 @@ export function makeEnergyNode(inputs: SimInputs): Node {
         port(`${D}.energyLandM2`, m2U, LAND),
       ],
     },
-    compute: (_ctx, portInputs): QMap => {
+    compute: (ctx, portInputs): QMap => {
       const housingUnits = portInputs[`${D}.housingUnitsIn`]?.value ?? 0;
       const ewbl = portInputs[`${D}.eligibleWindBaseLandM2In`]?.value;
       const r = computeEnergyRaw({ ...inputs, housingUnits, eligibleWindBaseLandM2: ewbl }, COEFFICIENTS);
+
+      // Requested-vs-actual (PROV-03): the wind siting cap can hold achieved self-sufficiency below
+      // the user's target. Record the request and the achieved value; clamped is the siting-cap flag
+      // (an over-target surplus is not a clamp, so we never falsely flag an honored scenario). When
+      // capped, the readout's own provenance is marked not honored via inputClamped.
+      const ssTarget = inputs.energySelfSufficiency ?? 1.0;
+      ctx.recordClamp({
+        key: `${D}.selfSufficiency`,
+        requested: ssTarget,
+        actual: r.selfSufficiency,
+        clamped: r.windCapped,
+        reason: r.windCapped ? 'wind siting cap: turbines limited by available siting land' : undefined,
+        unit: idxU,
+        boundary: ENERGY_SUPPLY,
+      });
+      const selfSufficiencyProv = r.windCapped
+        ? inputClamped(`${D}.selfSufficiency`, ssTarget, r.selfSufficiency)
+        : input(`${D}:selfSufficiency`);
+
       const mwh = (id: string, v: number, b = ENERGY_SUPPLY) => [`${D}.${id}`, q(v, mwhU, b, input(`${D}:${id}`))] as const;
       const idx = (id: string, v: number) => [`${D}.${id}`, q(v, idxU, ENERGY_SUPPLY, input(`${D}:${id}`))] as const;
       const land = (id: string, v: number) => [`${D}.${id}`, q(v, m2U, LAND, input(`${D}:${id}`))] as const;
@@ -225,7 +244,7 @@ export function makeEnergyNode(inputs: SimInputs): Node {
         idx('windCapped', r.windCapped ? 1 : 0),
         mwh('windShortfallMwh', r.windShortfallMwh),
         idx('seasonalWinterUpliftPct', r.seasonalWinterUpliftPct),
-        idx('selfSufficiency', r.selfSufficiency),
+        [`${D}.selfSufficiency`, q(r.selfSufficiency, idxU, ENERGY_SUPPLY, selfSufficiencyProv)] as const,
         mwh('fossilBackfillMwh', r.fossilBackfillMwh),
         mwh('curtailmentMwh', r.curtailmentMwh),
         mwh('batteryStorageMwh', r.batteryStorageMwh),

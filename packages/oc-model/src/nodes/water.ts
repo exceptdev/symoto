@@ -4,7 +4,7 @@
 // min(1,.)/division guards. The node recomputes the closed land use from the wired
 // energyGenerationLandM2 (the structured land result cannot cross a scalar port) and wraps the
 // water readouts in Quantities.
-import { q, input, type Node, type QMap } from '@symoto/core';
+import { q, input, inputClamped, clampRecord, type Node, type QMap } from '@symoto/core';
 import { COEFFICIENTS } from '../coefficients.generated.js';
 import { num, type ModelCoefficients } from '../config.js';
 import type { SimInputs, LandUseResult } from '../types.js';
@@ -97,10 +97,29 @@ export function makeWaterNode(inputs: SimInputs): Node {
         port(`${D}.precipitationMmPerYr`, idxU, INDEX),
       ],
     },
-    compute: (_ctx, portInputs): QMap => {
+    compute: (ctx, portInputs): QMap => {
       const energyGen = portInputs[`${D}.energyGenerationLandM2In`]?.value ?? 0;
       const landUse = computeLandUseRaw(inputs, COEFFICIENTS, energyGen);
       const r = computeWaterRaw(landUse, inputs, COEFFICIENTS);
+
+      // Requested-vs-actual (PROV-03): provided supply is bounded by the rainwater harvest ceiling,
+      // so achieved self-sufficiency can fall below the user's target. The clamp is monotone (actual
+      // <= target), so clampRecord's requested !== actual semantics are correct here. When clamped,
+      // the readout's provenance is marked not honored via inputClamped.
+      const ssTarget = Math.max(0, inputs.waterSelfSufficiency ?? 1.0);
+      const ssRecord = clampRecord(
+        `${D}.selfSufficiencyPct`,
+        ssTarget,
+        r.selfSufficiencyPct,
+        r.selfSufficiencyPct < ssTarget ? 'water self-sufficiency clamp: provided supply bounded by the rainwater harvest ceiling' : undefined,
+        idxU,
+        INDEX,
+      );
+      ctx.recordClamp(ssRecord);
+      const selfSufficiencyProv = ssRecord.clamped
+        ? inputClamped(`${D}.selfSufficiencyPct`, ssTarget, r.selfSufficiencyPct)
+        : input(`${D}:selfSufficiencyPct`);
+
       const m3 = (id: keyof WaterResult) => [`${D}.${id}`, q(r[id], m3U, WATER_FLOW, input(`${D}:${id}`))] as const;
       const idx = (id: keyof WaterResult) => [`${D}.${id}`, q(r[id], idxU, INDEX, input(`${D}:${id}`))] as const;
       const land = (id: keyof WaterResult) => [`${D}.${id}`, q(r[id], m2U, LAND, input(`${D}:${id}`))] as const;
@@ -111,7 +130,7 @@ export function makeWaterNode(inputs: SimInputs): Node {
         m3('surfaceStorageM3'),
         idx('storageDaysOfDemand'),
         m3('providedSupplyM3'),
-        idx('selfSufficiencyPct'),
+        [`${D}.selfSufficiencyPct`, q(r.selfSufficiencyPct, idxU, INDEX, selfSufficiencyProv)] as const,
         idx('harvestRatio'),
         land('waterInfrastructureLandM2'),
         land('catchmentAreaM2'),
