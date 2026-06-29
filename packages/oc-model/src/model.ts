@@ -4,6 +4,7 @@
 // (water, food, waste, emissions, jobs, cost).
 import { buildGraph, type Graph, type Node, type Connection } from '@symoto/core';
 import type { SimInputs } from './types.js';
+import { metaForNode } from './provenanceMeta.js';
 import { makeLandNode } from './nodes/land.js';
 import { makeEnergyNode } from './nodes/energy.js';
 import { makeWaterNode } from './nodes/water.js';
@@ -44,6 +45,17 @@ const SUFFIX_CONNECTIONS: readonly Connection[] = Object.freeze([
  * diet, turbine class, regen flag) are closed over by the node factories, since run() inputs are
  * numeric Quantities. Run with run(graph, {}).
  */
+/**
+ * Attach authored provenance metadata to a node from the central registry, keyed by the node's
+ * output port ids (the readout keys). This is additive and never edits the node's compute, ports,
+ * or topology, so no readout value changes and parity is preserved (PROV-01 D5-2).
+ */
+function withMeta(node: Node): Node {
+  const readoutKeys = node.ports.out.map((p) => p.id);
+  const meta = metaForNode(node.id, readoutKeys);
+  return meta ? { ...node, meta } : node;
+}
+
 export function buildOcModel(inputs: SimInputs): Graph {
   const nodes: Node[] = [
     makeLandNode(inputs),
@@ -54,6 +66,6 @@ export function buildOcModel(inputs: SimInputs): Graph {
     makeFoodNode(inputs),
     makeCostNode(inputs),
     makeEmissionsNode(inputs),
-  ];
+  ].map(withMeta);
   return buildGraph(nodes, [...CORE_CONNECTIONS, ...SUFFIX_CONNECTIONS]);
 }
