@@ -14,8 +14,12 @@ export { boundariesEqual, assertSameBoundary, boundariesCompatible, BoundaryViol
 export type { Boundary, Accounting, Basis, Temporal } from './quantity/boundary.js';
 
 // Provenance
-export { input, coefficient, opProv, adapterProv } from './quantity/provenance.js';
-export type { ProvRef, QOp } from './quantity/provenance.js';
+export { input, coefficient, opProv, adapterProv, nodeProv, sourceRef } from './quantity/provenance.js';
+export type { ProvRef, QOp, InputEdge, SourceRef } from './quantity/provenance.js';
+
+// Provenance trace (PROV-01, Success Criterion 4; the contract Phase 8 reuses for export)
+export { serializeTrace, reconstruct } from './provenance/trace.js';
+export type { ProvenanceTrace, NodeProvRecord, EdgeRecord, ReconstructedOrigin } from './provenance/trace.js';
 
 // Q-algebra
 export { add, sub, mul, div, scale, convert, adapt, integrate } from './quantity/algebra.js';
