@@ -59,3 +59,8 @@ export { resolveFixedPoint } from './eval/fixedpoint.js';
 export type { FixedPointOpts, FixedPointResult } from './eval/fixedpoint.js';
 export { run } from './eval/evaluate.js';
 export type { RunResult } from './eval/evaluate.js';
+
+// Stock-flow integrator (TIME-01): a fixed-step forward-Euler time series, a separate entry the
+// snapshot path never invokes; a stock-less single step reduces exactly to run(graph, inputs).
+export { runTimeSeries } from './time/integrator.js';
+export type { StockSpec, Frame, TimeSeriesResult } from './time/integrator.js';
