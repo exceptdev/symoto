@@ -95,7 +95,15 @@ describe('makeAdapterNode', () => {
     const readoutValue = result.readouts.absoluteDemand;
     expect(readoutValue).toBeDefined();
     expect(readoutValue!.boundary).toEqual(ABSOLUTE);
-    expect(readoutValue!.provenance.kind).toBe('adapter');
+    // After Plan 05-02, every node output carries a node-boundary ProvRef; the within-node DAG is on
+    // its `local`. The readout passes the adapted value through, so its local is the within-node leaf
+    // and the labeled crossing lives on the adapter node's record in the run trace.
+    expect(readoutValue!.provenance.kind).toBe('node');
     expect(readoutValue!.value).toBeCloseTo(2000, 9);
+    const adapterRecord = result.provenance.nodes.find((n) => n.local.kind === 'adapter');
+    expect(adapterRecord).toBeDefined();
+    if (adapterRecord && adapterRecord.local.kind === 'adapter') {
+      expect(adapterRecord.local.method).toBe('per-capita-to-absolute');
+    }
   });
 });

@@ -4,6 +4,8 @@
 // readout-node outputs.
 import type { Graph } from '../graph/graph.js';
 import type { QMap } from '../graph/node.js';
+import type { ProvRef } from '../quantity/provenance.js';
+import { serializeTrace, type ProvenanceTrace } from '../provenance/trace.js';
 import { makeRunContext } from '../run/context.js';
 import { kahnTopoSort } from './topo.js';
 import { resolveFixedPoint } from './fixedpoint.js';
@@ -11,6 +13,21 @@ import { evaluateNode, zeroFromPort } from './nodeEval.js';
 
 export interface RunResult {
   readonly readouts: QMap;
+  // The serializable provenance of the run (PROV-01, Success Criterion 4): node records plus edge id
+  // lists, captured once per node output (linear in node count), acyclic by construction.
+  readonly provenance: ProvenanceTrace;
+}
+
+/** Collect the node-boundary ProvRef of every evaluated node output, for serializeTrace. */
+function collectProvenance(values: Map<string, QMap>): ProvRef[] {
+  const records: ProvRef[] = [];
+  for (const out of values.values()) {
+    for (const key of Object.keys(out)) {
+      const qty = out[key];
+      if (qty !== undefined) records.push(qty.provenance);
+    }
+  }
+  return records;
 }
 
 function collectReadouts(graph: Graph, values: Map<string, QMap>): QMap {
@@ -46,5 +63,8 @@ export function run(graph: Graph, inputs: QMap): RunResult {
 
   for (const id of order.acyclicSuffix) evaluateNode(graph, id, values, ctx);
 
-  return { readouts: collectReadouts(graph, values) };
+  return {
+    readouts: collectReadouts(graph, values),
+    provenance: serializeTrace(collectProvenance(values)),
+  };
 }

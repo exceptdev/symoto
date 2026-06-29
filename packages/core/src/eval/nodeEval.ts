@@ -68,6 +68,24 @@ export function stampNodeProvenance(graph: Graph, node: Node, out: QMap): QMap {
   return stamped;
 }
 
+/**
+ * Reset each gathered input's provenance to a within-node leaf (`input(consumerPortId)`), keeping
+ * value, unit, and boundary identical. This is what keeps each node's `local` DAG within-node only:
+ * without it, a node that threads an input's provenance through Q-algebra (or passes it through)
+ * would embed the upstream node's already-stamped node-boundary ProvRef, reintroducing a nested
+ * cross-node reference (and, around the land<->energy cycle, unbounded nesting). The cross-node link
+ * is carried solely by the InputEdges, so no information is lost (PROV-01 D5-1, T-5-06 mitigation).
+ */
+function localizeInputs(inputs: QMap): QMap {
+  const localized: QMap = {};
+  for (const portId of Object.keys(inputs)) {
+    const qty = inputs[portId];
+    if (qty === undefined) continue;
+    localized[portId] = q(qty.value, qty.unit, qty.boundary, input(portId));
+  }
+  return localized;
+}
+
 export function evaluateNode(
   graph: Graph,
   nodeId: string,
@@ -76,7 +94,7 @@ export function evaluateNode(
   seed?: (consumerPort: Port) => Quantity,
 ): void {
   const node = findNode(graph, nodeId);
-  const inputs = gatherInputs(graph, node, values, seed);
+  const inputs = localizeInputs(gatherInputs(graph, node, values, seed));
   values.set(nodeId, stampNodeProvenance(graph, node, node.compute(ctx, inputs)));
 }
 
