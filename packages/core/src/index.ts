@@ -20,6 +20,10 @@ export type { ProvRef, QOp } from './quantity/provenance.js';
 // Q-algebra
 export { add, sub, mul, div, scale, convert, adapt, integrate } from './quantity/algebra.js';
 
+// Boundary-transition catalogue
+export { BOUNDARY_CATALOGUE, findTransition } from './quantity/catalogue.js';
+export type { BoundaryTransition } from './quantity/catalogue.js';
+
 // Graph and ports
 export { validateConnection } from './graph/connection.js';
 export type { Connection, PortRef, WireError } from './graph/connection.js';
