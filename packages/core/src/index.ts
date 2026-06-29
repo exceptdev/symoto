@@ -49,7 +49,7 @@ export type { AdapterNodeArgs } from './graph/adapterNode.js';
 
 // Run context and evaluator
 export { makeRunContext } from './run/context.js';
-export type { RunContext } from './run/context.js';
+export type { RunContext, Clock } from './run/context.js';
 // Requested-vs-actual (PROV-03)
 export { clampRecord } from './run/requestedActual.js';
 export type { RequestedActual } from './run/requestedActual.js';

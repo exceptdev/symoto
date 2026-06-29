@@ -3,7 +3,7 @@
 // refuse-to-net, the second structural choke point after validateConnection).
 // mul/div compose units; scale multiplies by a dimensionless factor; convert changes
 // unit within a dimension. adapt crosses a boundary through the curated catalogue;
-// integrate is typed but deferred (Phase 7).
+// integrate accumulates a flow into a stock over a timestep (forward Euler, Phase 7, TIME-01).
 import { q, type Quantity } from './quantity.js';
 import { assertSameBoundary, BoundaryViolation, type Boundary } from './boundary.js';
 import {
@@ -68,6 +68,63 @@ export function adapt(a: Quantity, toBoundary: Boundary, method: string, operand
   }
   return transition.apply(a, toBoundary, operand);
 }
-export function integrate(_stock: Quantity, _flow: Quantity, _dt: Quantity): Quantity {
-  throw new Error('integrate() is implemented in Phase 7 (TIME-01, stock-flow integrator).');
+/**
+ * Compare two boundaries on every dimension EXCEPT temporal (the same-accounting-frame check
+ * integrate enforces). A flow accumulates only into a stock of the same accounting frame; the
+ * temporal roles intentionally differ (flow vs stock) and are checked separately. An absent custom
+ * map is the empty map, never a wildcard, so the extension hatch cannot become a silent bypass.
+ */
+function sameAccountingFrame(a: Boundary, b: Boundary): boolean {
+  if (a.accounting !== b.accounting || a.basis !== b.basis || (a.locale ?? '') !== (b.locale ?? '')) {
+    return false;
+  }
+  const ca = a.custom ?? {};
+  const cb = b.custom ?? {};
+  const ka = Object.keys(ca).sort();
+  const kb = Object.keys(cb).sort();
+  if (ka.length !== kb.length) return false;
+  if (ka.some((k, i) => k !== kb[i])) return false;
+  return ka.every((k) => ca[k] === cb[k]);
+}
+
+function describeFrame(b: Boundary): string {
+  return JSON.stringify({ accounting: b.accounting, basis: b.basis, locale: b.locale, custom: b.custom });
+}
+
+/**
+ * integrate: accumulate a flow into a stock over one timestep (explicit forward Euler, the
+ * conservation identity made executable). The increment unit is composeMul(flow.unit, dt.unit),
+ * which must match the stock's dimension (a flow of m^3/yr times yr gives m^3, which must match a
+ * m^3 stock), else DimensionMismatch. The flow must be temporal 'flow' and the stock temporal
+ * 'stock', and the two must share an accounting frame (accounting, basis, locale, custom), else
+ * BoundaryViolation: a flow accumulates only into a stock of the same frame (refuse-to-net applied
+ * to the time dimension). Returns stock.value + flow.value*dt.value carrying the stock's unit and
+ * boundary, with an 'integrate' op naming the stock, the flow, and the dt so the cumulative number
+ * walks back to its flow. (TIME-01)
+ */
+export function integrate(stock: Quantity, flow: Quantity, dt: Quantity): Quantity {
+  const incrementUnit = composeMul(flow.unit, dt.unit);
+  if (!sameDimension(incrementUnit, stock.unit)) throw new DimensionMismatch(incrementUnit, stock.unit);
+  if (flow.boundary.temporal !== 'flow') {
+    throw new BoundaryViolation(
+      `integrate: the flow operand must be temporal 'flow', got '${flow.boundary.temporal}'. You can only integrate a flow.`,
+    );
+  }
+  if (stock.boundary.temporal !== 'stock') {
+    throw new BoundaryViolation(
+      `integrate: the stock operand must be temporal 'stock', got '${stock.boundary.temporal}'. You can only integrate into a stock.`,
+    );
+  }
+  if (!sameAccountingFrame(flow.boundary, stock.boundary)) {
+    throw new BoundaryViolation(
+      `integrate: a flow accumulates only into a stock of the same accounting frame: ${describeFrame(flow.boundary)} vs ${describeFrame(stock.boundary)}.`,
+    );
+  }
+  const increment = convertValue(flow.value * dt.value, incrementUnit, stock.unit);
+  return q(
+    stock.value + increment,
+    stock.unit,
+    stock.boundary,
+    opProv('integrate', [stock.provenance, flow.provenance, dt.provenance]),
+  );
 }

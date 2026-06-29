@@ -7,7 +7,7 @@ import type { QMap } from '../graph/node.js';
 import type { ProvRef } from '../quantity/provenance.js';
 import type { RequestedActual } from '../run/requestedActual.js';
 import { serializeTrace, type ProvenanceTrace } from '../provenance/trace.js';
-import { makeRunContext } from '../run/context.js';
+import { makeRunContext, type Clock } from '../run/context.js';
 import { kahnTopoSort } from './topo.js';
 import { resolveFixedPoint } from './fixedpoint.js';
 import { evaluateNode, zeroFromPort } from './nodeEval.js';
@@ -50,8 +50,8 @@ function collectReadouts(graph: Graph, values: Map<string, QMap>): QMap {
   return readouts;
 }
 
-export function run(graph: Graph, inputs: QMap, opts?: { locale?: string }): RunResult {
-  const ctx = makeRunContext(inputs, { locale: opts?.locale });
+export function run(graph: Graph, inputs: QMap, opts?: { locale?: string; clock?: Clock }): RunResult {
+  const ctx = makeRunContext(inputs, { locale: opts?.locale, clock: opts?.clock });
   const order = kahnTopoSort(graph);
   const values = new Map<string, QMap>();
 

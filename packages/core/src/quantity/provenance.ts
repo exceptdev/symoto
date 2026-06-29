@@ -3,10 +3,11 @@
 // any readout's number can be walked back to its inputs and coefficients.
 // A boundary crossing is its own first-class 'adapter' kind (NOT a QOp), naming the
 // method and both boundaries so the crossing is always visible in the DAG (UNIT-04).
-// 'integrate' is reserved (Phase 7) and not used by ops yet.
+// 'integrate' is the forward-Euler accumulation op (Phase 7, TIME-01): it names the stock,
+// the flow, and the dt so a cumulative stock walks back to its flow.
 import type { Boundary } from './boundary.js';
 
-export type QOp = 'add' | 'sub' | 'mul' | 'div' | 'scale' | 'convert';
+export type QOp = 'add' | 'sub' | 'mul' | 'div' | 'scale' | 'convert' | 'integrate';
 
 /**
  * A node-boundary input dependency, referencing an upstream producer by id only (never by
