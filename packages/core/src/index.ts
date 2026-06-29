@@ -24,6 +24,10 @@ export type { ProvenanceTrace, NodeProvRecord, EdgeRecord, ReconstructedOrigin }
 // Q-algebra
 export { add, sub, mul, div, scale, convert, adapt, integrate } from './quantity/algebra.js';
 
+// Honest aggregation (PROV-02): compound readouts that refuse a lone net
+export { compound, componentByRole } from './quantity/compound.js';
+export type { CompoundReadout, CompoundComponent, ComponentRole } from './quantity/compound.js';
+
 // Boundary-transition catalogue
 export { BOUNDARY_CATALOGUE, findTransition } from './quantity/catalogue.js';
 export type { BoundaryTransition } from './quantity/catalogue.js';
