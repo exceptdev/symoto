@@ -1,7 +1,10 @@
 packages:
   - 'packages/*'
 
+# esbuild ships a prebuilt platform binary via its optional dependency, so its postinstall
+# build script is unnecessary. Allow it where possible and do not treat an ignored optional
+# build as a fatal error, so a fresh clone installs cleanly (pnpm 11 defaults to fatal).
 onlyBuiltDependencies:
   - esbuild
-
+strictDepBuilds: false
 verifyDepsBeforeRun: false
