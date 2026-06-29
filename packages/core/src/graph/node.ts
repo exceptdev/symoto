@@ -12,9 +12,10 @@ export type QMap = Record<string, Quantity>;
 export interface PortSignature {
   readonly dimension: string;
   readonly boundary: Boundary;
-  // The port's unit. Optional because validateConnection only needs the dimension; the
-  // evaluator uses it to seed feedback edges with a zero Quantity of the right unit.
-  readonly unit?: SymUnit;
+  // The port's unit. Required metadata (UNIT-01): every node output and flow declares a
+  // unit, validated against the declared dimension by validateModel. The evaluator also
+  // uses it to seed feedback edges with a zero Quantity of the right unit.
+  readonly unit: SymUnit;
 }
 
 export interface Port {

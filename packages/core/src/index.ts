@@ -26,6 +26,8 @@ export type { Connection, PortRef, WireError } from './graph/connection.js';
 export { buildGraph } from './graph/graph.js';
 export type { Graph } from './graph/graph.js';
 export type { Node, NodeKind, Port, PortSignature, QMap } from './graph/node.js';
+export { validateModel, assertModelWellFormed } from './graph/validate.js';
+export type { ModelViolation } from './graph/validate.js';
 
 // Run context and evaluator
 export { makeRunContext } from './run/context.js';

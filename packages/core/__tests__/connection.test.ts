@@ -7,7 +7,8 @@ import { validateConnection } from '../src/graph/connection.js';
 const territorial: Boundary = { accounting: 'territorial', basis: 'absolute', temporal: 'flow' };
 
 function sig(unitName: string, boundary: Boundary): PortSignature {
-  return { dimension: unit(unitName).dimension, boundary };
+  const u = unit(unitName);
+  return { dimension: u.dimension, boundary, unit: u };
 }
 
 describe('validateConnection (wire-time refuse-to-net)', () => {
