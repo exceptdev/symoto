@@ -14,7 +14,7 @@ export { boundariesEqual, assertSameBoundary, boundariesCompatible, BoundaryViol
 export type { Boundary, Accounting, Basis, Temporal } from './quantity/boundary.js';
 
 // Provenance
-export { input, coefficient, opProv } from './quantity/provenance.js';
+export { input, coefficient, opProv, adapterProv } from './quantity/provenance.js';
 export type { ProvRef, QOp } from './quantity/provenance.js';
 
 // Q-algebra
