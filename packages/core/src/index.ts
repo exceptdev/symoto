@@ -64,3 +64,8 @@ export type { RunResult } from './eval/evaluate.js';
 // snapshot path never invokes; a stock-less single step reduces exactly to run(graph, inputs).
 export { runTimeSeries } from './time/integrator.js';
 export type { StockSpec, Frame, TimeSeriesResult } from './time/integrator.js';
+
+// Playback-series serialization (TIME-03; Phase 8 reuses this): a plain, acyclic, JSON-round-trippable
+// structure with one ProvenanceTrace and per-frame readout and stock scalars.
+export { serializeTimeSeries } from './time/series.js';
+export type { SerializedTimeSeries, SerializedFrame, SerializedStock, SerializedQuantity } from './time/series.js';
