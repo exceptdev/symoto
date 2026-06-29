@@ -10,6 +10,12 @@ const math = create(all!, {});
 // that refuse to net with each other or with anything else.
 math.createUnit('person');
 math.createUnit('dwelling');
+// Currency and a neutral dimensionless count/index unit the OC settlement model
+// (Phase 3) needs for cost figures (usd) and for counts, ratios, percentages, and
+// quality indices that have no physical dimension (idx). Each is its own base
+// dimension, so an index can never silently net against money, mass, or area.
+math.createUnit('usd');
+math.createUnit('idx');
 
 /** A plain, serializable, immutable unit descriptor. No mathjs object escapes. */
 export interface SymUnit {
