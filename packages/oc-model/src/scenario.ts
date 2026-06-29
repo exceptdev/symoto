@@ -12,8 +12,8 @@
 //
 // A missing or non-finite readout for any non-structural field throws loudly, so a mis-keyed
 // readout can never surface as undefined or NaN in a Vizapp readout card or hex tile (SWAP-03).
-import { run, type QMap } from '@symoto/core';
-import { buildOcModel } from './model.js';
+import { type QMap } from '@symoto/core';
+import { runOc } from './locale.js';
 import { COEFFICIENTS } from './coefficients.generated.js';
 import { computeLandUseRaw, eligibleWindBaseLandM2 } from './nodes/land.js';
 import { computeEnergyRaw, type EnergyResult } from './nodes/energy.js';
@@ -94,7 +94,10 @@ function sourceFromGraph<T>(domain: string, scaffold: T, readouts: QMap): T {
  * numeric scalar sourced from the graph readouts.
  */
 export function computeScenarioViaSymoto(inputs: SimInputs): ScenarioResult {
-  const { readouts } = run(buildOcModel(inputs), {});
+  // Route through the locale-bearing run so every readout boundary carries the country's ISO locale
+  // (LOC-01). The locale stamp is additive boundary metadata; .value is unchanged, so the
+  // re-sourcing below and the parity grid are unaffected.
+  const { readouts } = runOc(inputs);
 
   const num = (key: string): number => {
     const r = readouts[key];

@@ -18,6 +18,10 @@ export type { ReadoutMeta } from './provenanceMeta.js';
 export { computeScenarioViaSymoto } from './scenario.js';
 export type { ScenarioResult } from './scenario.js';
 
+// Locale wiring (Phase 6, LOC-01): the country selector becomes a first-class ISO locale that the
+// production run threads onto every readout boundary.
+export { localeOf, runOc } from './locale.js';
+
 // The shared parity surface (single source of truth for the in-repo adapter-parity test and the
 // downstream Vizapp parity gate): the scenario grid, comparator, epsilon policy, and deviations.
 export {
