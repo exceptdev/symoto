@@ -8,6 +8,11 @@ export { SLICE_COEFFS } from './coefficients.js';
 export { buildOcModel, CORE_CONNECTIONS } from './model.js';
 export type { SimInputs, EnergyScenario, DietaryPreference, LandUseResult, CategoryLandUse } from './types.js';
 
+// Authored provenance metadata (Phase 5, PROV-01): formula + source citations for headline readouts,
+// attached at assembly so a readout's origin reconstructs from a run trace alone.
+export { PROVENANCE_META, metaForNode } from './provenanceMeta.js';
+export type { ReadoutMeta } from './provenanceMeta.js';
+
 // The computeScenario-compatible adapter (Phase 4, SWAP-01): a Symoto run mapped onto the exact
 // bespoke ScenarioResult shape, so the Vizapp can swap engines with a one-import change.
 export { computeScenarioViaSymoto } from './scenario.js';
