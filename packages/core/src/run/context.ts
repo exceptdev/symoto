@@ -7,16 +7,23 @@ import type { RequestedActual } from './requestedActual.js';
 export interface RunContext {
   readonly inputs: QMap;
   readonly clock?: unknown;
+  /**
+   * The run locale (ISO country/region), a first-class parameter (LOC-01). When set, the evaluator
+   * stamps it onto every node output boundary, so locale propagates through connected nodes via every
+   * Quantity's boundary. When undefined, output boundaries stay locale-less and the run is byte-identical.
+   */
+  readonly locale?: string;
   /** The collected requested-vs-actual records (one per key; recordClamp upserts). */
   readonly clamps: RequestedActual[];
   /** Push a requested-vs-actual record, replacing any existing record for the same key. */
   recordClamp(record: RequestedActual): void;
 }
 
-export function makeRunContext(inputs: QMap): RunContext {
+export function makeRunContext(inputs: QMap, opts?: { locale?: string }): RunContext {
   const clamps: RequestedActual[] = [];
   return {
     inputs,
+    locale: opts?.locale,
     clamps,
     recordClamp(record: RequestedActual): void {
       // Upsert by key: a node in the fixed-point cyclic region computes once per iteration, so the

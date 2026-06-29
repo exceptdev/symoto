@@ -50,8 +50,8 @@ function collectReadouts(graph: Graph, values: Map<string, QMap>): QMap {
   return readouts;
 }
 
-export function run(graph: Graph, inputs: QMap): RunResult {
-  const ctx = makeRunContext(inputs);
+export function run(graph: Graph, inputs: QMap, opts?: { locale?: string }): RunResult {
+  const ctx = makeRunContext(inputs, { locale: opts?.locale });
   const order = kahnTopoSort(graph);
   const values = new Map<string, QMap>();
 
