@@ -84,3 +84,8 @@ export type {
   SerializedCompound,
   SerializedComponent,
 } from './export/runExport.js';
+// The minimal Professor-facing schema, the zero-dependency hand-rolled validator, and the
+// reconstruct-from-export path (an external consumer validates a run export and reconstructs any
+// readout's origin from the export alone).
+export { RUN_EXPORT_SCHEMA, validateRunExport, reconstructFromExport } from './export/schema.js';
+export type { SchemaValidationResult } from './export/schema.js';
