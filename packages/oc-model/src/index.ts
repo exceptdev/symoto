@@ -26,6 +26,10 @@ export { localeOf, runOc } from './locale.js';
 // coefficient, classified locale-varying vs deliberately-global, driving the invariance flagger.
 export { OC_LOCALE_COEFFICIENTS } from './localeCoefficients.js';
 
+// The OC invariance check (Phase 6, LOC-02): runs the manifest through the core flagger across
+// NL/VN/BR, flagging the historical constant-where-it-should-vary coefficients by default.
+export { flagOcInvariance } from './invariance.js';
+
 // The shared parity surface (single source of truth for the in-repo adapter-parity test and the
 // downstream Vizapp parity gate): the scenario grid, comparator, epsilon policy, and deviations.
 export {
