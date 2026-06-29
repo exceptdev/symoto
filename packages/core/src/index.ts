@@ -32,6 +32,10 @@ export type { CompoundReadout, CompoundComponent, ComponentRole } from './quanti
 export { BOUNDARY_CATALOGUE, findTransition } from './quantity/catalogue.js';
 export type { BoundaryTransition } from './quantity/catalogue.js';
 
+// Locale invariance (LOC-02): flag a coefficient constant across locales unless declared invariant
+export { flagInvariance } from './locale/invariance.js';
+export type { LocaleDescriptor, InvarianceFlag } from './locale/invariance.js';
+
 // Graph and ports
 export { validateConnection } from './graph/connection.js';
 export type { Connection, PortRef, WireError } from './graph/connection.js';
