@@ -25,7 +25,7 @@ export { localeOf, runOc } from './locale.js';
 // Stock-flow playback (Phase 7): the OC model run through the core integrator. runOcTimeSeries is the
 // stock-less TIME-02 witness (single step == runOc); runOcCarbonPlayback (Plan 05) is the genuine
 // cumulative-carbon stock exercise.
-export { runOcTimeSeries } from './playback.js';
+export { runOcTimeSeries, runOcCarbonPlayback } from './playback.js';
 
 // The OC locale-coefficient manifest (Phase 6, LOC-02): one LocaleDescriptor per consumed
 // coefficient, classified locale-varying vs deliberately-global, driving the invariance flagger.
