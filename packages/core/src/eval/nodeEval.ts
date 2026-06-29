@@ -44,10 +44,16 @@ export function gatherInputs(
  * Wrap every output of a node in a node-boundary ProvRef (PROV-01, Success Criterion 4). For each
  * output `[key, qty]`, the node's incoming graph edges become InputEdges, the provenance compute
  * produced becomes `local` (preserving the carbon adapter DAG), and `formula`/`sources` are looked
- * up from `node.meta` by readout key. Value, unit, and boundary are unchanged: only provenance is
- * replaced, so the readout number stays byte-identical and parity holds.
+ * up from `node.meta` by readout key. Value and unit are unchanged: only provenance is replaced, so
+ * the readout number stays byte-identical and parity holds.
+ *
+ * Locale (LOC-01): when `ctx.locale` is defined, the output boundary is rebuilt as
+ * `{ ...boundary, locale: ctx.locale }`, so the run's locale propagates onto every Quantity's
+ * boundary uniformly. When `ctx.locale` is undefined, the boundary is left exactly as is (no `locale`
+ * key is introduced), so the default path is byte-identical. Stamping is uniform across the run, so
+ * within-run `boundariesEqual` is preserved and the refuse-to-net guard is intact.
  */
-export function stampNodeProvenance(graph: Graph, node: Node, out: QMap): QMap {
+export function stampNodeProvenance(graph: Graph, node: Node, out: QMap, ctx: RunContext): QMap {
   const inputEdges: InputEdge[] = graph.connections
     .filter((conn) => conn.to.nodeId === node.id)
     .map((conn) => ({ fromNodeId: conn.from.nodeId, fromPortId: conn.from.portId, toPortId: conn.to.portId }));
@@ -55,10 +61,11 @@ export function stampNodeProvenance(graph: Graph, node: Node, out: QMap): QMap {
   for (const key of Object.keys(out)) {
     const qty = out[key];
     if (qty === undefined) continue;
+    const boundary = ctx.locale !== undefined ? { ...qty.boundary, locale: ctx.locale } : qty.boundary;
     stamped[key] = q(
       qty.value,
       qty.unit,
-      qty.boundary,
+      boundary,
       nodeProv(node.id, key, qty.provenance, inputEdges, {
         formula: node.meta?.formula?.[key],
         sources: node.meta?.sources?.[key] ?? [],
@@ -95,7 +102,7 @@ export function evaluateNode(
 ): void {
   const node = findNode(graph, nodeId);
   const inputs = localizeInputs(gatherInputs(graph, node, values, seed));
-  values.set(nodeId, stampNodeProvenance(graph, node, node.compute(ctx, inputs)));
+  values.set(nodeId, stampNodeProvenance(graph, node, node.compute(ctx, inputs), ctx));
 }
 
 /** Deterministic feedback-edge seed: a zero Quantity carrying the consumer port unit and boundary. */
