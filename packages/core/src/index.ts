@@ -69,3 +69,18 @@ export type { StockSpec, Frame, TimeSeriesResult } from './time/integrator.js';
 // structure with one ProvenanceTrace and per-frame readout and stock scalars.
 export { serializeTimeSeries } from './time/series.js';
 export type { SerializedTimeSeries, SerializedFrame, SerializedStock, SerializedQuantity } from './time/series.js';
+
+// Run export (PROV-04): a versioned, self-describing, acyclic export of a full run (topology, inputs,
+// readouts, the Phase 5 ProvenanceTrace, requested-vs-actual, and optional invariance flags, compounds,
+// and a playback series) an external reviewer or agent can interrogate without the engine.
+export { exportRun, RUN_EXPORT_SCHEMA_VERSION } from './export/runExport.js';
+export type {
+  RunExport,
+  ExportRunOpts,
+  SerializedTopology,
+  SerializedNode,
+  SerializedPort,
+  SerializedConnection,
+  SerializedCompound,
+  SerializedComponent,
+} from './export/runExport.js';
