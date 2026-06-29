@@ -101,9 +101,44 @@ describe('algebra mul/div/scale/convert and deferrals', () => {
     expect(() => convert(q(1, unit('MWh'), perCapita, input('x')), unit('m^2'))).toThrow();
   });
 
-  it('adapt throws a Phase 2 message and integrate throws a Phase 7 message', () => {
+  it('integrate throws a Phase 7 message', () => {
     const x = q(1, unit('MWh'), perCapita, input('x'));
-    expect(() => adapt(x, territorial, 'm')).toThrow(/Phase 2/);
     expect(() => integrate(x, x, x)).toThrow(/Phase 7/);
+  });
+});
+
+describe('adapt (run-time boundary crossing via the catalogue)', () => {
+  const consumptionPerCapita: Boundary = { accounting: 'consumption', basis: 'per-capita', temporal: 'flow' };
+  const consumptionAbsolute: Boundary = { accounting: 'consumption', basis: 'absolute', temporal: 'flow' };
+
+  it('performs a catalogued per-capita-to-absolute crossing and stamps adapter provenance', () => {
+    const perCap = q(2, unit('kWh/person'), consumptionPerCapita, input('perCapita'));
+    const population = q(1000, unit('person'), consumptionAbsolute, input('population'));
+    const r = adapt(perCap, consumptionAbsolute, 'per-capita-to-absolute', population);
+    expect(r.value).toBeCloseTo(2000, 9);
+    expect(r.boundary).toEqual(consumptionAbsolute);
+    expect(r.provenance.kind).toBe('adapter');
+    if (r.provenance.kind === 'adapter') {
+      expect(r.provenance.method).toBe('per-capita-to-absolute');
+    }
+  });
+
+  it('throws BoundaryViolation for an unlisted crossing, naming the method', () => {
+    const x = q(1, unit('MWh'), perCapita, input('x'));
+    let caught: unknown;
+    try {
+      adapt(x, territorial, 'no-such-method');
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(BoundaryViolation);
+    expect((caught as Error).message).toContain('no-such-method');
+  });
+
+  it('never returns a Quantity whose boundary is not the requested toBoundary', () => {
+    const perCap = q(3, unit('kWh/person'), consumptionPerCapita, input('pc'));
+    const population = q(10, unit('person'), consumptionAbsolute, input('pop'));
+    const r = adapt(perCap, consumptionAbsolute, 'per-capita-to-absolute', population);
+    expect(r.boundary).toEqual(consumptionAbsolute);
   });
 });
