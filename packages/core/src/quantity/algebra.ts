@@ -2,9 +2,10 @@
 // add/sub enforce unit dimension AND boundary equality (the run-time half of
 // refuse-to-net, the second structural choke point after validateConnection).
 // mul/div compose units; scale multiplies by a dimensionless factor; convert changes
-// unit within a dimension. adapt and integrate are typed but deferred (Phase 2, Phase 7).
+// unit within a dimension. adapt crosses a boundary through the curated catalogue;
+// integrate is typed but deferred (Phase 7).
 import { q, type Quantity } from './quantity.js';
-import { assertSameBoundary, type Boundary } from './boundary.js';
+import { assertSameBoundary, BoundaryViolation, type Boundary } from './boundary.js';
 import {
   sameDimension,
   convertValue,
@@ -14,6 +15,7 @@ import {
   type SymUnit,
 } from './units.js';
 import { opProv } from './provenance.js';
+import { findTransition } from './catalogue.js';
 
 /** add: enforce unit dimension AND boundary equality, then bring b into a's unit. */
 export function add(a: Quantity, b: Quantity): Quantity {
@@ -50,8 +52,21 @@ export function scale(a: Quantity, factor: number): Quantity {
 export function convert(a: Quantity, to: SymUnit): Quantity {
   return q(convertValue(a.value, a.unit, to), to, a.boundary, opProv('convert', [a.provenance]));
 }
-export function adapt(_a: Quantity, _toBoundary: Boundary, _method: string): Quantity {
-  throw new Error('adapt() is implemented in Phase 2 (UNIT-04, boundary transition catalogue).');
+/**
+ * adapt: the only run-time path that changes a Quantity's boundary. It defers entirely to
+ * the catalogue. A method/from/to that findTransition does not resolve throws
+ * BoundaryViolation, with no bypass and no silent passthrough; a resolved transition's
+ * apply() composes the value and stamps the adapter ProvRef (never re-stamped here, so the
+ * crossing stays traceable). (UNIT-04)
+ */
+export function adapt(a: Quantity, toBoundary: Boundary, method: string, operand?: Quantity): Quantity {
+  const transition = findTransition(method, a.boundary, toBoundary);
+  if (!transition) {
+    throw new BoundaryViolation(
+      `No catalogued boundary transition "${method}" from ${JSON.stringify(a.boundary)} to ${JSON.stringify(toBoundary)}. Crossing a boundary requires a listed adapter; there is no bypass.`,
+    );
+  }
+  return transition.apply(a, toBoundary, operand);
 }
 export function integrate(_stock: Quantity, _flow: Quantity, _dt: Quantity): Quantity {
   throw new Error('integrate() is implemented in Phase 7 (TIME-01, stock-flow integrator).');
