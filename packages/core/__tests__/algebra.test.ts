@@ -101,9 +101,17 @@ describe('algebra mul/div/scale/convert and deferrals', () => {
     expect(() => convert(q(1, unit('MWh'), perCapita, input('x')), unit('m^2'))).toThrow();
   });
 
-  it('integrate throws a Phase 7 message', () => {
-    const x = q(1, unit('MWh'), perCapita, input('x'));
-    expect(() => integrate(x, x, x)).toThrow(/Phase 7/);
+  it('integrate is implemented (Phase 7): it accumulates a flow into a stock and refuses a non-stock target', () => {
+    const stockB: Boundary = { accounting: 'territorial', basis: 'absolute', temporal: 'stock' };
+    const flowB: Boundary = { accounting: 'territorial', basis: 'absolute', temporal: 'flow' };
+    const stock = q(100, unit('m^3'), stockB, input('stock'));
+    const flow = q(10, unit('m^3/year'), flowB, input('flow'));
+    const dt = q(2, unit('year'), flowB, input('dt'));
+    expect(integrate(stock, flow, dt).value).toBe(120);
+    // A flow with a matching dimension but the wrong temporal role (a flow, not a stock, target)
+    // is refused with BoundaryViolation.
+    const flowTarget = q(100, unit('m^3'), flowB, input('target'));
+    expect(() => integrate(flowTarget, flow, dt)).toThrow(BoundaryViolation);
   });
 });
 
